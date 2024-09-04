@@ -18,13 +18,27 @@ const App: React.FC = () => {
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      setUrl(imageSrc);
+      const byteString = atob(imageSrc.split(",")[1]); 
+      const mimeString = imageSrc.split(",")[0].split(":")[1].split(";")[0];
+      const byteArray = new Uint8Array(byteString.length);
+  
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+  
+      const blob = new Blob([byteArray], { type: mimeString });
+      const blobUrl = URL.createObjectURL(blob);
+  
+      setUrl(blobUrl);
     }
   }, [webcamRef]);
 
-  const handleImageUpload = (event:any) => {
-    const image = event.target.files[0];
-    setUrl(URL.createObjectURL(image));
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = event.target;
+    if (files && files.length > 0) {
+      const image = files[0];
+      setUrl(URL.createObjectURL(image));
+    }
   };
 
   const [recognizedText, setRecognizedText] = useState('');
