@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/tesseract.js": "^2.0.0",
     "react": "^18.3.1",
+    "react-camera-pro": "^1.4.0",
     "react-dom": "^18.3.1",
     "react-webcam": "^7.2.0",
     "tesseract.js": "^5.1.1",
