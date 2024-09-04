@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import Tesseract from "tesseract.js";
 import "./index.css";
@@ -13,36 +13,33 @@ const App: React.FC = () => {
   const [isCaptureEnable, setCaptureEnable] = useState<boolean>(false);
   const webcamRef = useRef<Webcam>(null);
   const [url, setUrl] = useState<string | null>(null);
-  const [text, setText] = useState<string>(""); // State to store extracted text
   const [loading, setLoading] = useState<boolean>(false); // State to manage loading
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setUrl(imageSrc);
-      recognizeText(imageSrc); // Call OCR function
     }
   }, [webcamRef]);
 
-  const recognizeText = (imageSrc: string) => {
-    setLoading(true);
-    Tesseract.recognize(
-      imageSrc,
-      'eng',
-      {
-        logger: (m) => console.log(m), // Optional logger to check progress
-      }
-    )
-      .then(({ data: { text } }) => {
-        setText(text);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-      });
+  const handleImageUpload = (event:any) => {
+    const image = event.target.files[0];
+    setUrl(URL.createObjectURL(image));
   };
 
+  const [recognizedText, setRecognizedText] = useState('');
+  useEffect(() => {
+    const recognizeText = async () => {
+      setLoading(true)
+      if (url) {
+        const result = await Tesseract.recognize(url);
+        setRecognizedText(result.data.text);
+      }
+      setLoading(false)
+    };
+    recognizeText();
+  }, [url]);
+  
   return (
     <>
       <header>
@@ -51,6 +48,8 @@ const App: React.FC = () => {
       {!isCaptureEnable && (
         <button onClick={() => setCaptureEnable(true)}>Start</button>
       )}
+
+      <input type="file" accept="image/*" onChange={handleImageUpload} />
       {isCaptureEnable && (
         <>
           <div>
@@ -80,10 +79,10 @@ const App: React.FC = () => {
         </>
       )}
       {loading && <p>Loading OCR...</p>}
-      {text && (
+      {recognizedText && (
         <div>
           <h2>Extracted Text:</h2>
-          <p>{text}</p>
+          <p>{recognizedText}</p>
         </div>
       )}
     </>
